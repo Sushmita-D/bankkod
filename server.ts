@@ -178,6 +178,8 @@ async function startServer() {
   });
 
   // ================= CHAT (HUGGING FACE ROUTER) =================
+// ================= HEALTH =================
+
 app.get("/api/chat/health", (req, res) => {
   res.json({
     status: "ok",
@@ -185,44 +187,47 @@ app.get("/api/chat/health", (req, res) => {
     model: "meta-llama/Meta-Llama-3-8B-Instruct"
   });
 });
-  app.post("/api/chat", async (req, res) => {
-    try {
-      const { messages } = req.body;
 
-      if (!process.env.HF_TOKEN) {
-        return res.status(500).json({ error: "HF_TOKEN not configured" });
-      }
+// ================= CHAT =================
 
-      const response = await fetch(
-        "https://router.huggingface.co/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.HF_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "meta-llama/Meta-Llama-3-8B-Instruct",
-            messages,
-            max_tokens: 400,
-            temperature: 0.7
-          })
-        }
-      );
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return res.status(response.status).json(data);
-      }
-
-      res.json(data);
-
-    } catch (error: any) {
-      console.error("HF Chat Error:", error);
-      res.status(500).json({ error: error.message });
+    if (!process.env.HF_TOKEN) {
+      return res.status(500).json({ error: "HF_TOKEN not configured" });
     }
-  });
+
+    const response = await fetch(
+      "https://router.huggingface.co/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "meta-llama/Meta-Llama-3-8B-Instruct",
+          messages,
+          max_tokens: 400,
+          temperature: 0.7
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+
+  } catch (error: any) {
+    console.error("HF Chat Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
   // ================= TRANSFER =================
 
