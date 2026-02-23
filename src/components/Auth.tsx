@@ -51,7 +51,7 @@ export const Register = ({ onToggle, onSuccess }: { onToggle: () => void, onSucc
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch("https://bankkod.onrender.com/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -201,7 +201,7 @@ export const Login = ({ onToggle, onSuccess, onForgotPassword }: { onToggle: () 
     setIsLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("https://bankkod.onrender.com/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -313,7 +313,7 @@ export const ResetPassword = ({ onSuccess, onBackToLogin }: { onSuccess: () => v
     const token = params.get("token");
 
     try {
-      const res = await fetch("/api/reset-password", {
+      const res = await fetch("https://bankkod.onrender.com/api/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password })
@@ -402,7 +402,7 @@ export const ForgotPassword = ({ onBackToLogin }: { onBackToLogin: () => void })
     setMessage("");
     setError("");
     try {
-      const res = await fetch("/api/forgot-password", {
+      const res = await fetch("https://bankkod.onrender.com/api/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
