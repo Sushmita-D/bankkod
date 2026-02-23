@@ -960,7 +960,7 @@ export const Dashboard = ({ onLogout, onAssistantClick }: { onLogout: () => void
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/user/data', {
+      const res = await fetch("https://bankkod.onrender.com/api/user/data", {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -978,7 +978,7 @@ export const Dashboard = ({ onLogout, onAssistantClick }: { onLogout: () => void
 
   const handleTransfer = async (recipient: string, amount: number) => {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/transfer', {
+    const res = await fetch("https://bankkod.onrender.com/api/transfer", {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
