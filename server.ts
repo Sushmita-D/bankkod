@@ -178,21 +178,16 @@ async function startServer() {
   });
 
   // ================= CHAT (HUGGING FACE ROUTER) =================
-// ================= HEALTH =================
-
-app.get("/api/chat/health", (req, res) => {
-  res.json({
-    status: "ok",
-    hasToken: !!process.env.HF_TOKEN,
-    model: "meta-llama/Meta-Llama-3-8B-Instruct"
-  });
-});
-
 // ================= CHAT =================
 
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages } = req.body;
+
+    // Validate input
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: "Invalid messages format" });
+    }
 
     if (!process.env.HF_TOKEN) {
       return res.status(500).json({ error: "HF_TOKEN not configured" });
@@ -208,7 +203,7 @@ app.post("/api/chat", async (req, res) => {
         },
         body: JSON.stringify({
           model: "meta-llama/Meta-Llama-3-8B-Instruct",
-          messages,
+          messages: messages,
           max_tokens: 400,
           temperature: 0.7
         })
@@ -218,6 +213,7 @@ app.post("/api/chat", async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error("HF Router Error:", data);
       return res.status(response.status).json(data);
     }
 
@@ -225,44 +221,55 @@ app.post("/api/chat", async (req, res) => {
 
   } catch (error: any) {
     console.error("HF Chat Error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: "Failed to communicate with HuggingFace",
+      details: error.message
+    });
   }
 });
 
-  // ================= TRANSFER =================
 
-  app.post("/api/transfer", authenticate, async (req: any, res) => {
-    const { recipient, amount } = req.body;
-    const connection = await pool.getConnection();
+// ================= TRANSFER =================
 
-    try {
-      await connection.beginTransaction();
+app.post("/api/transfer", authenticate, async (req: any, res) => {
+  const { amount } = req.body;
 
-      const [rows]: any = await connection.query(
-        "SELECT balance FROM users WHERE id=?",
-        [req.user.id]
-      );
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Invalid transfer amount" });
+  }
 
-      if (rows[0].balance < amount) {
-        throw new Error("Insufficient balance");
-      }
+  const connection = await pool.getConnection();
 
-      await connection.query(
-        "UPDATE users SET balance = balance - ? WHERE id=?",
-        [amount, req.user.id]
-      );
+  try {
+    await connection.beginTransaction();
 
-      await connection.commit();
+    const [rows]: any = await connection.query(
+      "SELECT balance FROM users WHERE id=?",
+      [req.user.id]
+    );
 
-      res.json({ message: "Transfer successful" });
+    const currentBalance = parseFloat(rows[0].balance);
 
-    } catch (err: any) {
-      await connection.rollback();
-      res.status(400).json({ error: err.message });
-    } finally {
-      connection.release();
+    if (currentBalance < amount) {
+      throw new Error("Insufficient balance");
     }
-  });
+
+    await connection.query(
+      "UPDATE users SET balance = balance - ? WHERE id=?",
+      [amount, req.user.id]
+    );
+
+    await connection.commit();
+
+    res.json({ message: "Transfer successful" });
+
+  } catch (err: any) {
+    await connection.rollback();
+    res.status(400).json({ error: err.message });
+  } finally {
+    connection.release();
+  }
+});
 
   // ================= VITE =================
 
