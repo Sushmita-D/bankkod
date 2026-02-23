@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import crypto from "crypto";
@@ -67,6 +68,11 @@ const initDb = async () => {
 
 async function startServer() {
   const app = express();
+  app.use(cors({
+  origin: "https://kodbank-bank.vercel.app",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
   const PORT = process.env.PORT || 8003;
 
   if (process.env.DATABASE_URL) await initDb();
